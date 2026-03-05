@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="DesignHunter">
+<meta name="theme-color" content="#0f0d0a">
+<title>DesignHunter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  :root {
+    --bg: #0f0d0a; --bg2: #1a1610; --bg3: #221e17;
+    --gold: #c9a84c; --gold2: #e8c97a;
+    --teal: #4a9e8e; --teal2: #6abfaf;
+    --red: #c0452b; --cream: #f0e8d8; --muted: #7a6e60; --border: #2e2820;
+  }
+  html, body { background: var(--bg); color: var(--cream); font-family: 'Space Mono', monospace; min-height: 100vh; overflow-x: hidden; }
+
+  /* HEADER */
+  .header { position: sticky; top: 0; z-index: 100; background: var(--bg); border-bottom: 1px solid var(--border); padding: 14px 18px 10px; display: flex; justify-content: space-between; align-items: center; }
+  .header-eyebrow { font-size: 8px; letter-spacing: 4px; text-transform: uppercase; color: var(--gold); margin-bottom: 2px; }
+  .header-title { font-family: 'Cormorant Garamond', serif; font-size: 26px; font-weight: 600; color: var(--cream); letter-spacing: -0.5px; line-height: 1; }
+  .header-title em { font-style: italic; color: var(--gold); }
+  .header-btn { background: var(--gold); color: var(--bg); border: none; padding: 10px 16px; font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; border-radius: 2px; cursor: pointer; font-weight: 700; transition: opacity 0.2s; }
+  .header-btn:active { opacity: 0.8; }
+  .header-btn:disabled { opacity: 0.4; }
+
+  /* SEARCH */
+  .search-panel { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 14px 18px; display: flex; flex-direction: column; gap: 12px; }
+  .field-label { font-size: 8px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); margin-bottom: 5px; display: block; }
+  .search-input { width: 100%; background: var(--bg3); border: 1px solid var(--border); color: var(--cream); font-family: 'Space Mono', monospace; font-size: 14px; padding: 11px 13px; border-radius: 4px; outline: none; -webkit-appearance: none; transition: border-color 0.2s; }
+  .search-input:focus { border-color: var(--gold); }
+  .search-input::placeholder { color: var(--muted); }
+  .price-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .chips-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .chip { padding: 6px 12px; border-radius: 20px; border: 1px solid var(--border); font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted); background: transparent; cursor: pointer; transition: all 0.2s; letter-spacing: 1px; }
+  .chip.active { background: var(--teal); border-color: var(--teal); color: white; }
+
+  /* SERVER CONFIG banner */
+  .server-banner { margin: 14px 16px 0; background: var(--bg3); border: 1px solid var(--gold); border-radius: 6px; padding: 12px 14px; display: flex; align-items: center; gap: 10px; }
+  .server-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--red); flex-shrink: 0; }
+  .server-dot.ok { background: var(--teal); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+  .server-text { font-size: 10px; color: var(--muted); line-height: 1.5; flex: 1; }
+  .server-text strong { color: var(--cream); }
+  .btn-config { font-family: 'Space Mono', monospace; font-size: 9px; background: transparent; border: 1px solid var(--gold); color: var(--gold); padding: 5px 10px; border-radius: 3px; cursor: pointer; white-space: nowrap; letter-spacing: 1px; }
+
+  /* TABS */
+  .tabs { display: flex; border-bottom: 1px solid var(--border); background: var(--bg); position: sticky; top: 65px; z-index: 90; }
+  .tab { flex: 1; padding: 11px 0; font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; text-align: center; color: var(--muted); border: none; background: transparent; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; position: relative; }
+  .tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+  /* CONTENT */
+  .content { padding: 14px 14px 100px; }
+
+  /* LOADING */
+  .loading-wrap { display: flex; flex-direction: column; align-items: center; padding: 60px 20px; gap: 14px; }
+  .spinner-ring { width: 40px; height: 40px; border: 2px solid var(--border); border-top: 2px solid var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-title { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 20px; color: var(--cream); opacity: 0.7; }
+  .loading-step { font-size: 10px; color: var(--muted); letter-spacing: 1px; text-align: center; }
+
+  /* EMPTY */
+  .empty-wrap { text-align: center; padding: 60px 20px; }
+  .empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.3; }
+  .empty-title { font-family: 'Cormorant Garamond', serif; font-size: 22px; color: var(--muted); margin-bottom: 8px; }
+  .empty-sub { font-size: 11px; color: var(--muted); opacity: 0.6; line-height: 1.7; }
+
+  /* CARD */
+  .card { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 14px; overflow: hidden; animation: fadeUp 0.3s ease both; }
+  .card:nth-child(1){animation-delay:.04s} .card:nth-child(2){animation-delay:.08s} .card:nth-child(3){animation-delay:.12s} .card:nth-child(4){animation-delay:.16s} .card:nth-child(5){animation-delay:.20s}
+  @keyframes fadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+
+  .card-accent { height: 3px; }
+  .card-accent.high { background: linear-gradient(90deg, var(--teal), var(--gold)); }
+  .card-accent.medium { background: var(--gold); }
+  .card-accent.low { background: var(--red); }
+
+  .card-inner { padding: 13px 13px 11px; }
+  .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 9px; gap: 8px; }
+  .card-source { font-size: 8px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); background: var(--bg3); padding: 3px 8px; border-radius: 10px; }
+  .score-wrap { text-align: right; flex-shrink: 0; }
+  .score-num { font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 600; line-height: 1; }
+  .score-num.high { color: var(--teal2); } .score-num.medium { color: var(--gold2); } .score-num.low { color: var(--red); }
+  .score-label { font-size: 7px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
+
+  .card-img { width: 100%; height: 160px; object-fit: cover; border-radius: 4px; margin-bottom: 10px; background: var(--bg3); }
+  .card-title { font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 600; color: var(--cream); line-height: 1.3; margin-bottom: 8px; }
+  .price-row-card { display: flex; align-items: baseline; gap: 8px; margin-bottom: 11px; flex-wrap: wrap; }
+  .price-main { font-size: 22px; color: var(--teal2); font-weight: 700; }
+  .price-market { font-size: 11px; color: var(--muted); text-decoration: line-through; }
+  .price-margin { font-size: 11px; color: var(--gold); font-weight: 700; }
+
+  .card-location { font-size: 10px; color: var(--muted); margin-bottom: 10px; }
+
+  .card-analysis { background: var(--bg3); border-left: 2px solid var(--teal); padding: 9px 11px; border-radius: 0 4px 4px 0; margin-bottom: 11px; }
+  .analysis-label { font-size: 7px; letter-spacing: 3px; text-transform: uppercase; color: var(--teal); margin-bottom: 3px; }
+  .analysis-text { font-size: 12px; color: var(--muted); line-height: 1.6; font-style: italic; }
+
+  .card-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 11px; }
+  .tag { font-size: 8px; letter-spacing: 1px; text-transform: uppercase; padding: 3px 8px; border-radius: 2px; border: 1px solid; }
+  .tag.teal { color: var(--teal2); border-color: var(--teal); }
+  .tag.gold { color: var(--gold2); border-color: var(--gold); }
+  .tag.red { color: var(--red); border-color: var(--red); }
+
+  .card-actions { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+  .btn-vai { background: var(--teal); color: white; border: none; padding: 11px 16px; font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; border-radius: 4px; cursor: pointer; font-weight: 700; }
+  .btn-vai:active { opacity: 0.8; }
+  .btn-star { background: var(--bg3); border: 1px solid var(--border); color: var(--muted); padding: 11px 14px; font-size: 16px; border-radius: 4px; cursor: pointer; transition: all 0.2s; }
+  .btn-star.saved { color: var(--gold); border-color: var(--gold); background: rgba(201,168,76,0.1); }
+
+  /* SETUP MODAL */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 500; align-items: flex-end; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--bg2); border-top: 1px solid var(--border); border-radius: 16px 16px 0 0; padding: 24px 20px 40px; width: 100%; max-height: 85vh; overflow-y: auto; }
+  .modal-title { font-family: 'Cormorant Garamond', serif; font-size: 22px; color: var(--gold); margin-bottom: 6px; }
+  .modal-sub { font-size: 11px; color: var(--muted); margin-bottom: 20px; line-height: 1.6; }
+  .modal-field { margin-bottom: 14px; }
+  .modal-input { width: 100%; background: var(--bg3); border: 1px solid var(--border); color: var(--cream); font-family: 'Space Mono', monospace; font-size: 12px; padding: 11px 13px; border-radius: 4px; outline: none; }
+  .modal-input:focus { border-color: var(--gold); }
+  .btn-save-config { width: 100%; background: var(--gold); color: var(--bg); border: none; padding: 14px; font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; border-radius: 4px; cursor: pointer; font-weight: 700; margin-top: 6px; }
+  .modal-close { position: absolute; top: 20px; right: 20px; background: transparent; border: none; color: var(--muted); font-size: 22px; cursor: pointer; }
+  .step-box { background: var(--bg3); border-radius: 6px; padding: 14px; margin-bottom: 16px; }
+  .step-box-title { font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); margin-bottom: 10px; }
+  .step { display: flex; gap: 10px; margin-bottom: 8px; font-size: 11px; color: var(--muted); line-height: 1.5; }
+  .step-n { color: var(--gold); font-weight: 700; flex-shrink: 0; }
+
+  /* SETTINGS */
+  .settings-section { margin-bottom: 24px; }
+  .settings-title { font-size: 8px; letter-spacing: 4px; text-transform: uppercase; color: var(--gold); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .settings-title::after { content:''; flex:1; height:1px; background:var(--border); }
+  .settings-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .settings-row { display: flex; justify-content: space-between; align-items: center; padding: 13px 15px; border-bottom: 1px solid var(--border); gap: 12px; cursor: pointer; }
+  .settings-row:last-child { border-bottom: none; }
+  .settings-row-name { font-size: 13px; color: var(--cream); margin-bottom: 2px; }
+  .settings-row-desc { font-size: 10px; color: var(--muted); line-height: 1.4; }
+
+  .kw-pill { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid var(--border); font-size: 12px; color: var(--cream); cursor: pointer; }
+  .kw-pill:last-child { border-bottom: none; }
+  .kw-pill:active { background: var(--bg3); }
+  .kw-arrow { color: var(--muted); }
+
+  /* BOTTOM NAV */
+  .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg2); border-top: 1px solid var(--border); display: flex; z-index: 200; padding-bottom: env(safe-area-inset-bottom, 0); }
+  .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 0 12px; cursor: pointer; border: none; background: transparent; color: var(--muted); font-family: 'Space Mono', monospace; font-size: 8px; letter-spacing: 1px; text-transform: uppercase; transition: color 0.2s; position: relative; }
+  .nav-item.active { color: var(--gold); }
+  .nav-icon { font-size: 20px; line-height: 1; }
+  .nav-badge { position: absolute; top: 6px; right: calc(50% - 18px); background: var(--red); color: white; font-size: 8px; min-width: 14px; height: 14px; border-radius: 7px; display: none; align-items: center; justify-content: center; padding: 0 3px; font-weight: 700; }
+
+  /* TOAST */
+  .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--teal); color: white; padding: 10px 20px; border-radius: 20px; font-size: 12px; opacity: 0; transition: all 0.3s; pointer-events: none; white-space: nowrap; z-index: 999; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="header-eyebrow">Mid-Century Scout</div>
+    <div class="header-title">Design<em>Hunter</em></div>
+  </div>
+  <button class="header-btn" id="scanBtn" onclick="startScan()">🔍 Cerca</button>
+</div>
+
+<div class="tabs">
+  <button class="tab active" id="tab-risultati" onclick="switchTab('risultati')">Risultati</button>
+  <button class="tab" id="tab-salvati" onclick="switchTab('salvati')">Salvati</button>
+  <button class="tab" id="tab-impostazioni" onclick="switchTab('impostazioni')">Imposta</button>
+</div>
+
+<div class="content" id="mainContent">
+
+  <!-- RISULTATI -->
+  <div id="view-risultati">
+    <div class="search-panel">
+      <div>
+        <label class="field-label">Cosa cerchi</label>
+        <input class="search-input" id="keyword" type="text" placeholder="es. lampada arteluce, sedia cassina…" value="lampada mid century">
+      </div>
+      <div class="price-row">
+        <div>
+          <label class="field-label">Prezzo max (€)</label>
+          <input class="search-input" id="maxPrice" type="number" value="250" min="0">
+        </div>
+        <div>
+          <label class="field-label">Margine min (%)</label>
+          <input class="search-input" id="minMargin" type="number" value="80" min="0">
+        </div>
+      </div>
+      <div>
+        <label class="field-label">Piattaforme</label>
+        <div class="chips-row">
+          <button class="chip active" data-src="vinted" onclick="toggleChip(this)">Vinted</button>
+          <button class="chip active" data-src="subito" onclick="toggleChip(this)">Subito.it</button>
+          <button class="chip active" data-src="ebay" onclick="toggleChip(this)">eBay</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Server status -->
+    <div class="server-banner" id="serverBanner">
+      <div class="server-dot" id="serverDot"></div>
+      <div class="server-text" id="serverText"><strong>Server non configurato</strong><br>Imposta l'URL del server per cercare annunci reali</div>
+      <button class="btn-config" onclick="openSetup()">Configura</button>
+    </div>
+
+    <div style="padding: 14px 0 0;" id="resultsArea">
+      <div class="empty-wrap">
+        <div class="empty-icon">💡</div>
+        <div class="empty-title">Pronto a cacciare</div>
+        <div class="empty-sub">Configura il server, poi premi Cerca.<br>L'AI valuterà ogni annuncio per te.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SALVATI -->
+  <div id="view-salvati" style="display:none; padding-top:14px;">
+    <div class="empty-wrap" id="savedEmpty">
+      <div class="empty-icon">⭐</div>
+      <div class="empty-title">Nessun annuncio salvato</div>
+      <div class="empty-sub">Premi ★ su un annuncio per salvarlo qui.</div>
+    </div>
+    <div id="savedList"></div>
+  </div>
+
+  <!-- IMPOSTAZIONI -->
+  <div id="view-impostazioni" style="display:none; padding-top:14px;">
+    <div class="settings-section">
+      <div class="settings-title">Server</div>
+      <div class="settings-card">
+        <div class="settings-row" onclick="openSetup()">
+          <div>
+            <div class="settings-row-name">URL Server</div>
+            <div class="settings-row-desc" id="serverUrlDisplay">Non configurato</div>
+          </div>
+          <span style="color:var(--muted);font-size:18px;">›</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-title">Keyword rapide</div>
+      <div class="settings-card" id="kwList"></div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-title">Dati</div>
+      <div class="settings-card">
+        <div class="settings-row" onclick="clearSaved()">
+          <div>
+            <div class="settings-row-name" style="color:var(--red)">Cancella annunci salvati</div>
+            <div class="settings-row-desc">Rimuove tutti i preferiti</div>
+          </div>
+          <span style="color:var(--muted);font-size:18px;">›</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-title">Aggiungi alla home</div>
+      <div class="settings-card">
+        <div class="settings-row" style="cursor:default; flex-direction:column; align-items:flex-start; gap:10px;">
+          <div style="font-size:11px; color:var(--muted); line-height:1.7;">
+            <div style="margin-bottom:6px; color:var(--cream); font-size:12px;">Usa l'app come icona Android</div>
+            <div>① Premi i tre puntini ⋮ in Chrome</div>
+            <div>② Tocca <strong style="color:var(--cream)">"Aggiungi a schermata Home"</strong></div>
+            <div>③ Conferma — apparirà l'icona!</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+  <button class="nav-item active" id="nav-risultati" onclick="switchTab('risultati')">
+    <span class="nav-icon">🔍</span><span>Cerca</span>
+  </button>
+  <button class="nav-item" id="nav-salvati" onclick="switchTab('salvati')">
+    <span class="nav-icon">⭐</span><span>Salvati</span>
+    <span class="nav-badge" id="nav-badge"></span>
+  </button>
+  <button class="nav-item" id="nav-impostazioni" onclick="switchTab('impostazioni')">
+    <span class="nav-icon">⚙️</span><span>Imposta</span>
+  </button>
+</div>
+
+<!-- SETUP MODAL -->
+<div class="modal-overlay" id="setupModal" onclick="closeSetupOutside(event)">
+  <div class="modal" style="position:relative;">
+    <button class="modal-close" onclick="closeSetup()">✕</button>
+    <div class="modal-title">Configura il Server</div>
+    <div class="modal-sub">Il server gira gratis su Render.com e fa il lavoro sporco — cerca su eBay, Subito e Vinted e ti manda gli annunci veri con link reali.</div>
+
+    <div class="step-box">
+      <div class="step-box-title">Come creare il server gratis (10 min)</div>
+      <div class="step"><span class="step-n">1.</span><span>Crea account su <strong style="color:var(--cream)">github.com</strong> (gratuito)</span></div>
+      <div class="step"><span class="step-n">2.</span><span>Carica la cartella <strong style="color:var(--cream)">server/</strong> come nuovo repository</span></div>
+      <div class="step"><span class="step-n">3.</span><span>Crea account su <strong style="color:var(--cream)">render.com</strong> → "New Web Service" → collega il repo</span></div>
+      <div class="step"><span class="step-n">4.</span><span>Aggiungi le variabili d'ambiente (EBAY_APP_ID, ANTHROPIC_API_KEY, ecc.)</span></div>
+      <div class="step"><span class="step-n">5.</span><span>Render ti dà un URL tipo <strong style="color:var(--cream)">https://design-hunter-xxxx.onrender.com</strong> — incollalo qui sotto</span></div>
+    </div>
+
+    <div class="modal-field">
+      <label class="field-label">URL del tuo server Render</label>
+      <input class="modal-input" id="serverUrlInput" type="url" placeholder="https://design-hunter-xxxx.onrender.com">
+    </div>
+
+    <button class="btn-save-config" onclick="saveServerConfig()">Salva e testa connessione</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── State ─────────────────────────────────────────────────────────────────────
+let serverUrl   = localStorage.getItem('dh_server') || '';
+let savedIds    = new Set(JSON.parse(localStorage.getItem('dh_saved_ids') || '[]'));
+let savedItems  = JSON.parse(localStorage.getItem('dh_saved_items') || '[]');
+let activeSrcs  = new Set(['vinted','subito','ebay']);
+let listings    = [];
+
+const KEYWORDS = [
+  'lampada arteluce','lampada stilnovo','lampada arredoluce',
+  'sedia cassina vintage','joe colombo lampada',
+  'vico magistretti','gino sarfatti','gio ponti',
+  'lampada mid century','arredamento vintage design'
+];
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+function init() {
+  updateServerBanner();
+  updateNavBadge();
+  if (serverUrl) document.getElementById('serverUrlInput').value = serverUrl;
+  renderKwList();
+}
+
+// ── Tab switch ────────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  ['risultati','salvati','impostazioni'].forEach(t => {
+    document.getElementById('view-'+t).style.display = t===tab ? 'block' : 'none';
+    document.getElementById('tab-'+t).classList.toggle('active', t===tab);
+    document.getElementById('nav-'+t).classList.toggle('active', t===tab);
+  });
+  if (tab==='salvati') renderSaved();
+}
+
+// ── Source chips ──────────────────────────────────────────────────────────────
+function toggleChip(btn) {
+  const src = btn.dataset.src;
+  if (activeSrcs.has(src) && activeSrcs.size===1) return;
+  activeSrcs.has(src) ? activeSrcs.delete(src) : activeSrcs.add(src);
+  btn.classList.toggle('active', activeSrcs.has(src));
+}
+
+// ── Server banner ─────────────────────────────────────────────────────────────
+function updateServerBanner() {
+  const dot  = document.getElementById('serverDot');
+  const text = document.getElementById('serverText');
+  const urlDisplay = document.getElementById('serverUrlDisplay');
+  if (serverUrl) {
+    dot.classList.add('ok');
+    const short = serverUrl.replace('https://','').slice(0,35) + (serverUrl.length>43?'…':'');
+    text.innerHTML = `<strong>Server connesso</strong><br><span style="font-size:9px;word-break:break-all;">${short}</span>`;
+    urlDisplay.textContent = short;
+  } else {
+    dot.classList.remove('ok');
+    text.innerHTML = `<strong>Server non configurato</strong><br>Imposta l'URL per annunci reali`;
+    urlDisplay.textContent = 'Non configurato';
+  }
+}
+
+// ── Setup modal ───────────────────────────────────────────────────────────────
+function openSetup() {
+  document.getElementById('setupModal').classList.add('open');
+  if (serverUrl) document.getElementById('serverUrlInput').value = serverUrl;
+}
+function closeSetup() { document.getElementById('setupModal').classList.remove('open'); }
+function closeSetupOutside(e) { if (e.target.id==='setupModal') closeSetup(); }
+
+async function saveServerConfig() {
+  let url = document.getElementById('serverUrlInput').value.trim().replace(/\/$/, '');
+  if (!url) return showToast('Inserisci un URL');
+  if (!url.startsWith('http')) url = 'https://' + url;
+
+  showToast('Test connessione…');
+  try {
+    const r = await fetch(url + '/health', { signal: AbortSignal.timeout(8000) });
+    const data = await r.json();
+    serverUrl = url;
+    localStorage.setItem('dh_server', serverUrl);
+    updateServerBanner();
+    closeSetup();
+    const features = [];
+    if (data.ebay)   features.push('eBay ✓');
+    if (data.vinted) features.push('Vinted ✓');
+    if (data.ai)     features.push('AI ✓');
+    showToast('✅ Connesso! ' + features.join(' · '));
+  } catch(e) {
+    showToast('❌ Server non raggiungibile — controlla l\'URL');
+  }
+}
+
+// ── Search ────────────────────────────────────────────────────────────────────
+async function startScan() {
+  if (!serverUrl) { openSetup(); return; }
+
+  const keyword   = document.getElementById('keyword').value.trim() || 'lampada vintage';
+  const maxPrice  = parseInt(document.getElementById('maxPrice').value) || 250;
+  const minMargin = parseInt(document.getElementById('minMargin').value) || 80;
+  const sources   = [...activeSrcs].join(',');
+
+  document.getElementById('scanBtn').disabled = true;
+  document.getElementById('scanBtn').textContent = '…';
+
+  const area = document.getElementById('resultsArea');
+  area.innerHTML = `
+    <div class="loading-wrap">
+      <div class="spinner-ring"></div>
+      <div class="loading-title">Hunting in corso…</div>
+      <div class="loading-step" id="loadStep">Cerco su ${[...activeSrcs].join(', ')}…</div>
+    </div>`;
+
+  try {
+    const params = new URLSearchParams({ q: keyword, max_price: maxPrice, min_margin: minMargin, sources });
+    const r = await fetch(`${serverUrl}/search?${params}`, { signal: AbortSignal.timeout(45000) });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const data = await r.json();
+    listings = data.results || [];
+
+    area.innerHTML = '';
+
+    if (listings.length === 0) {
+      area.innerHTML = `<div class="empty-wrap"><div class="empty-icon">🔍</div><div class="empty-title">Nessun affare trovato</div><div class="empty-sub">Prova ad alzare il prezzo max<br>o abbassare il margine minimo</div></div>`;
+    } else {
+      const hdr = document.createElement('div');
+      hdr.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;';
+      hdr.innerHTML = `<span style="font-size:11px;color:var(--muted)"><span style="color:var(--gold);font-weight:700;">${listings.length}</span> annunci trovati</span><span style="font-size:9px;color:var(--muted)">Score AI ↓</span>`;
+      area.appendChild(hdr);
+      listings.forEach(l => area.appendChild(buildCard(l)));
+
+      // bip se affare top
+      const top = listings.find(l => (l.score||0) >= 80);
+      if (top) { beep(); showToast(`🟢 Affare trovato! Score ${top.score}/100`); }
+    }
+  } catch(e) {
+    area.innerHTML = `<div class="empty-wrap"><div class="empty-icon">⚠️</div><div class="empty-title">Errore connessione</div><div class="empty-sub">${e.message}<br><br>Verifica che il server sia attivo su Render.</div></div>`;
+  }
+
+  document.getElementById('scanBtn').disabled = false;
+  document.getElementById('scanBtn').textContent = '🔍 Cerca';
+}
+
+// ── Card builder ──────────────────────────────────────────────────────────────
+function scoreLevel(s) { return s>=80?'high':s>=60?'medium':'low'; }
+function scoreLabel(s) { return s>=80?'Ottimo':s>=60?'Discreto':'Basso'; }
+
+function buildCard(l) {
+  const level  = scoreLevel(l.score||50);
+  const margin = l.margin || 0;
+  const isSaved = savedIds.has(l.id);
+
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.id = 'card-'+l.id;
+  card.innerHTML = `
+    <div class="card-accent ${level}"></div>
+    <div class="card-inner">
+      <div class="card-top">
+        <span class="card-source">${l.source}</span>
+        <div class="score-wrap">
+          <div class="score-num ${level}">${l.score||'?'}</div>
+          <div class="score-label">${scoreLabel(l.score||0)}</div>
+        </div>
+      </div>
+      ${l.image ? `<img class="card-img" src="${l.image}" alt="${l.title}" loading="lazy" onerror="this.style.display='none'">` : ''}
+      <div class="card-title">${l.title}</div>
+      <div class="price-row-card">
+        <span class="price-main">€${Number(l.price).toFixed(0)}</span>
+        ${l.marketPrice ? `<span class="price-market">€${l.marketPrice}</span><span class="price-margin">+${margin}%</span>` : ''}
+      </div>
+      ${l.location ? `<div class="card-location">📍 ${l.location}</div>` : ''}
+      <div class="card-tags">
+        ${(l.score||0)>=80 ? '<span class="tag red">⚡ Urgente</span>' : ''}
+        <span class="tag teal">${l.source}</span>
+      </div>
+      <div class="card-analysis">
+        <div class="analysis-label">Analisi AI</div>
+        <div class="analysis-text">${l.aiAnalysis || 'Verifica autenticità e condizioni prima di acquistare.'}</div>
+      </div>
+      <div class="card-actions">
+        <button class="btn-vai" onclick="goTo('${l.url}')">Vai all'annuncio →</button>
+        <button class="btn-star ${isSaved?'saved':''}" id="star-${l.id}" onclick="toggleSave('${l.id}')">
+          ${isSaved?'★':'☆'}
+        </button>
+      </div>
+    </div>`;
+  return card;
+}
+
+function goTo(url) { window.open(url, '_blank'); }
+
+// ── Save ──────────────────────────────────────────────────────────────────────
+function toggleSave(id) {
+  const item = listings.find(l=>l.id===id) || savedItems.find(l=>l.id===id);
+  if (!item) return;
+  if (savedIds.has(id)) {
+    savedIds.delete(id);
+    savedItems = savedItems.filter(l=>l.id!==id);
+    showToast('Rimosso dai salvati');
+  } else {
+    savedIds.add(id);
+    if (!savedItems.find(l=>l.id===id)) savedItems.push(item);
+    showToast('⭐ Salvato!');
+  }
+  const btn = document.getElementById('star-'+id);
+  if (btn) { btn.classList.toggle('saved', savedIds.has(id)); btn.textContent = savedIds.has(id)?'★':'☆'; }
+  localStorage.setItem('dh_saved_ids',   JSON.stringify([...savedIds]));
+  localStorage.setItem('dh_saved_items', JSON.stringify(savedItems));
+  updateNavBadge();
+}
+
+function renderSaved() {
+  const list  = document.getElementById('savedList');
+  const empty = document.getElementById('savedEmpty');
+  list.innerHTML = '';
+  if (savedItems.length===0) { empty.style.display='block'; return; }
+  empty.style.display='none';
+  savedItems.forEach(l => list.appendChild(buildCard(l)));
+}
+
+function updateNavBadge() {
+  const b = document.getElementById('nav-badge');
+  if (savedIds.size>0) { b.style.display='flex'; b.textContent=savedIds.size; }
+  else { b.style.display='none'; }
+}
+
+// ── Settings helpers ──────────────────────────────────────────────────────────
+function renderKwList() {
+  const el = document.getElementById('kwList');
+  el.innerHTML = KEYWORDS.map(kw =>
+    `<div class="kw-pill" onclick="useKw('${kw}')"><span>${kw}</span><span class="kw-arrow">›</span></div>`
+  ).join('');
+}
+
+function useKw(kw) {
+  document.getElementById('keyword').value = kw;
+  switchTab('risultati');
+  showToast('Keyword: ' + kw);
+}
+
+function clearSaved() {
+  savedIds.clear(); savedItems = [];
+  localStorage.removeItem('dh_saved_ids');
+  localStorage.removeItem('dh_saved_items');
+  updateNavBadge();
+  showToast('Salvati cancellati');
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+let _tt;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(_tt); _tt = setTimeout(()=>t.classList.remove('show'), 2600);
+}
+
+// ── Beep ──────────────────────────────────────────────────────────────────────
+function beep() {
+  try {
+    const ctx = new AudioContext();
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.frequency.value = 880; g.gain.setValueAtTime(0.2, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+0.4);
+    o.start(); o.stop(ctx.currentTime+0.4);
+  } catch(e){}
+}
+
+init();
+</script>
+</body>
+</html>
